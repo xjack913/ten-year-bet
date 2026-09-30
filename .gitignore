@@ -1,1 +1,3 @@
 __pycache__/
+counter/.wrangler/
+counter/node_modules/

@@ -1,0 +1,11 @@
+name = "bet-counter"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+account_id = "8bed6fd9481097ede394653811058cad"
+workers_dev = false
+routes = [{ pattern = "bet-api.xjack.tw", custom_domain = true }]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "bet-counter"
+database_id = "0198894f-00c8-4d81-9f6d-b1b5bbd38f2d"

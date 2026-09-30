@@ -16,6 +16,12 @@ https://bet.xjack.tw
 
 遇到腳本沒辦法自動處理的狀況（ETF 分割、股票股利、單日漲跌超過 25%、缺價），Actions 會直接失敗，網站停在上一次的正確資料，等人工處理。
 
+## 瀏覽人次
+
+`counter/` 是 Cloudflare Worker＋D1，網址 `https://bet-api.xjack.tw/views`（GET 讀、POST +1，POST 只收 bet.xjack.tw 來源）。只存一個數字，不記 IP 或個人資料。同一個分頁工作階段只算一次。
+
+部署：在 `counter/` 執行 `npx wrangler deploy`（要先 `npx wrangler login`）。
+
 ## 每局結算
 
 1. 在 `data/settlements.json` 該局填入 `settled_on`（實際結算交易日）、`xjack_nav`（我那天的淨值，從 `data/xjack.json` 抄）、`mil_nav`（岳母的淨值）、`post_url`（粉專結算文網址）。

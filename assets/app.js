@@ -14,7 +14,6 @@
   const sign = (r) => (r > 0.00005 ? "+" : r < -0.00005 ? "−" : "");
   const pct = (r, dp = 2) => `${sign(r)}${Math.abs(r * 100).toFixed(dp)}%`;
   const boardNum = (r) => `${sign(r)}${Math.abs(r * 100).toFixed(1)}`;
-  const wan = (nav, base) => `${(nav / base * 100).toFixed(2)} 萬`;
   const int = (n) => n.toLocaleString("en-US");
   const money = (n) => n.toLocaleString("en-US", { maximumFractionDigits: 2 });
 
@@ -66,16 +65,32 @@
     const { rounds, current, phase, meLive, settled, base } = st;
     const table = $("linescore");
     const thead = el("thead");
-    const hr = el("tr");
-    hr.append(el("th", { scope: "col" }));
+    const nowYear = todayTPE().slice(0, 4);
+
+    // 年份列：同一年的局合併成一格
+    const yr = el("tr", { class: "years" });
+    yr.append(el("th", { scope: "col" }));
+    const groups = [];
+    for (const r of rounds) {
+      const y = r.end.slice(0, 4);
+      if (groups.length && groups[groups.length - 1].y === y) groups[groups.length - 1].n += 1;
+      else groups.push({ y, n: 1 });
+    }
+    for (const g of groups) {
+      yr.append(el("th", { scope: "colgroup", colspan: g.n, class: g.y === nowYear ? "this-year" : null }, g.y));
+    }
+    yr.append(el("th", { class: "sum", colspan: 2 }));
+
+    const hr = el("tr", { class: "rounds" });
+    hr.append(el("th", { scope: "col" }, ""));
     for (const r of rounds) {
       const label = `第 ${r.n} 局：${fmtDay(nextDay(r.start))}～${fmtDay(r.end)}`;
-      const isCur = current && r.n === current.n && phase !== "done";
+      const isCur = current && r.n === current.n;
       hr.append(el("th", { scope: "col", title: label, "aria-label": label, class: isCur ? "is-current" : null }, String(r.n)));
     }
     hr.append(el("th", { scope: "col", class: "sum first-sum" }, "勝"));
     hr.append(el("th", { scope: "col", class: "sum", title: "截至上次結算" }, "累計"));
-    thead.append(hr);
+    thead.append(yr, hr);
 
     const wins = { me: settled.filter((r) => r.winner === "me").length, mil: settled.filter((r) => r.winner === "mil").length };
     const last = settled[settled.length - 1];
@@ -84,8 +99,10 @@
       { key: "mil", name: "岳母", tag: "波段操作派", ret: "milRet", nav: "mil_nav" },
       { key: "me", name: "我", tag: "大盤市值仔", ret: "meRet", nav: "xjack_nav" },
     ];
+    let lit = 0;
+    const litAttrs = (cls) => ({ class: `${cls || ""} lit`.trim(), style: `--i:${lit++}` });
     for (const row of rows) {
-      const tr = el("tr");
+      const tr = el("tr", { class: `row-${row.key}` });
       const th = el("th", { scope: "row" }, row.name);
       th.append(el("small", {}, row.tag));
       tr.append(th);
@@ -94,22 +111,22 @@
         if (r.settled) {
           const v = r[row.ret];
           const cls = r.winner === "tie" ? null : r.winner === row.key ? "win" : "lose";
-          td = el("td", { class: cls, "aria-label": `第 ${r.n} 局 ${row.name} ${pct(v, 1)}${r.winner === row.key ? "，勝" : ""}` }, boardNum(v));
+          td = el("td", { ...litAttrs(cls), "aria-label": `第 ${r.n} 局 ${row.name} ${pct(v, 1)}${r.winner === row.key ? "，勝" : ""}` }, boardNum(v));
         } else if (current && r.n === current.n && phase !== "pre") {
-          if (row.key === "me") {
-            td = el("td", { class: "live", "aria-label": `第 ${r.n} 局 我 目前 ${pct(meLive, 1)}` }, boardNum(meLive));
-          } else {
-            td = el("td", { class: "hidden-val", "aria-label": `第 ${r.n} 局 岳母 結算時揭曉` }, "?");
-          }
+          td = row.key === "me"
+            ? el("td", { ...litAttrs("live"), "aria-label": `第 ${r.n} 局 我 目前 ${pct(meLive, 1)}` }, boardNum(meLive))
+            : el("td", { ...litAttrs("hidden-val"), "aria-label": `第 ${r.n} 局 岳母 結算時揭曉` }, "?");
+        } else if (current && r.n === current.n) {
+          td = el("td", { class: "pregame", "aria-label": `第 ${r.n} 局 即將開打` }, "開打");
         } else {
           td = el("td", { class: "off", "aria-label": `第 ${r.n} 局 尚未開始` });
         }
         tr.append(td);
       }
-      tr.append(el("td", { class: "sum first-sum", "aria-label": `${row.name} 勝場 ${wins[row.key]}` }, String(wins[row.key])));
+      tr.append(el("td", { ...litAttrs("sum first-sum"), "aria-label": `${row.name} 勝場 ${wins[row.key]}` }, String(wins[row.key])));
       if (last) {
         const cum = last[row.nav] / base - 1;
-        tr.append(el("td", { class: "sum", "aria-label": `${row.name} 累計 ${pct(cum, 1)}` }, boardNum(cum)));
+        tr.append(el("td", { ...litAttrs("sum"), "aria-label": `${row.name} 累計 ${pct(cum, 1)}` }, boardNum(cum)));
       } else {
         tr.append(el("td", { class: "sum dash", "aria-label": `${row.name} 累計 尚無結算` }, "—"));
       }
@@ -127,19 +144,14 @@
       return;
     }
     const dot = el("span", { class: "dot", "aria-hidden": "true" });
-    const range = `${fmtDay(nextDay(current.start))}～${fmtDay(current.end)}`;
-    if (phase === "pre") {
-      status.append(dot, document.createTextNode(`第 ${current.n} 局 ${fmtMD(nextDay(current.start))} 開打`));
-      foot.textContent = `第 ${current.n} 局：${range}，${fmtDay(current.reveal)} 公開結果。數字是每局報酬率（%）。`;
-    } else if (phase === "live") {
-      status.append(dot, document.createTextNode(`第 ${current.n} 局進行中`));
-      foot.textContent = `第 ${current.n} 局：${range}，${fmtDay(current.reveal)} 公開結果。數字是每局報酬率（%），「?」是岳母的成績，結算時才揭曉。`;
-    } else {
-      status.append(dot, document.createTextNode(`第 ${current.n} 局結算中`));
-      foot.textContent = `第 ${current.n} 局已經比完，正在對帳，${fmtDay(current.reveal)} 公開結果。`;
-    }
+    const label = phase === "pre" ? `第 ${current.n} 局 ${fmtMD(nextDay(current.start))} 開打`
+      : phase === "live" ? `第 ${current.n} 局進行中` : `第 ${current.n} 局結算中`;
+    status.append(dot, document.createTextNode(label));
+    foot.textContent = settled.length || phase !== "pre"
+      ? "數字是每局報酬率（%）。「?」是岳母的成績，結算時才揭曉。"
+      : "數字是每局報酬率（%）。每局結算後，贏的那格會亮起來。";
 
-    const cur = table.querySelector("th.is-current");
+    const cur = table.querySelector("tr.rounds th.is-current");
     const scroller = $("board-scroll");
     // 本局在可視範圍外才捲，而且讓本局靠右、前面比完的局留在畫面上
     if (cur && scroller.scrollWidth > scroller.clientWidth) {
@@ -148,37 +160,54 @@
     }
   }
 
-  // ---------- 雙方現況 ----------
-  function setDelta(node, r, prefix) {
-    node.className = "delta " + (r > 0.00005 ? "up" : r < -0.00005 ? "down" : "flat");
-    node.textContent = `${prefix} ${r > 0.00005 ? "▲" : r < -0.00005 ? "▼" : ""} ${pct(r)}`.replace("  ", " ");
+  // ---------- 倒數 ----------
+  function renderCountdown(st) {
+    const { current, phase } = st;
+    if (!current) return;
+    const today = todayTPE();
+    const settling = phase === "settling";
+    const target = settling ? current.reveal : current.end;
+    const days = Math.max(0, Math.round((parseDay(target) - parseDay(today)) / DAY));
+    $("cd-label").textContent = settling ? `第 ${current.n} 局比完了，揭曉倒數` : `第 ${current.n} 局結算倒數`;
+    $("cd-days").textContent = String(days);
+    $("cd-sub").textContent = settling
+      ? `正在跟岳母對帳，${fmtDay(current.reveal)} 公開結果`
+      : `${fmtDay(current.end)} 收盤結算，${fmtDay(current.reveal)} 公開結果`;
+    $("countdown").hidden = false;
   }
 
-  function renderSides(st, x) {
+  // ---------- 對戰卡 ----------
+  function deltaSpan(r) {
+    const cls = r > 0.00005 ? "up" : r < -0.00005 ? "down" : null;
+    const arrow = r > 0.00005 ? "▲ " : r < -0.00005 ? "▼ " : "";
+    return el("span", { class: cls }, `${arrow}${pct(r)}`);
+  }
+
+  function setFigure(node, nav, base) {
+    node.replaceChildren(document.createTextNode((nav / base * 100).toFixed(2)), el("small", {}, "萬"));
+  }
+
+  function renderCorners(st, x) {
     const { latest, series, base, settled, current } = st;
-    const figMe = $("me-figure");
-    figMe.replaceChildren();
-    figMe.append(el("span", { class: "from" }, "100 萬 →"), document.createTextNode(wan(latest.nav, base)));
-    setDelta($("me-delta"), latest.r, "累計");
+    setFigure($("me-figure"), latest.nav, base);
+    const meSub = $("me-sub");
+    meSub.replaceChildren(document.createTextNode("累計 "), deltaSpan(latest.r));
     if (series.length === 1) {
       const fees = x.initial_buys.reduce((s, b) => s + b.fee, 0);
-      $("me-note").textContent = `${fmtMD(latest.d)} 收盤買進，手續費 ${int(fees)} 元已經扣掉。${fmtMD(nextDay(latest.d))} 開打，之後每個交易日自動更新。`;
+      meSub.append(document.createTextNode(`，買進手續費 ${int(fees)} 元`));
     } else {
-      $("me-note").textContent = `截至 ${fmtDay(latest.d)} 收盤，每個交易日自動更新。`;
+      meSub.append(document.createTextNode(`，截至 ${fmtMD(latest.d)} 收盤`));
     }
 
-    const figMil = $("mil-figure");
-    figMil.replaceChildren();
     const last = settled[settled.length - 1];
-    const nextReveal = current ? `下一次 ${fmtDay(current.reveal)} 公開。` : "";
+    const milSub = $("mil-sub");
     if (last) {
-      figMil.append(el("span", { class: "from" }, "100 萬 →"), document.createTextNode(wan(last.mil_nav, base)));
-      setDelta($("mil-delta"), last.mil_nav / base - 1, "累計");
-      $("mil-note").textContent = `截至第 ${last.n} 局結算（${fmtDay(last.settled_on || last.end)}）。${nextReveal}`;
+      setFigure($("mil-figure"), last.mil_nav, base);
+      milSub.replaceChildren(document.createTextNode("累計 "), deltaSpan(last.mil_nav / base - 1),
+        document.createTextNode(`，第 ${last.n} 局結算`));
     } else {
-      figMil.textContent = "結算才揭曉";
-      $("mil-delta").textContent = "";
-      $("mil-note").textContent = `她用的是真實帳戶，每局結算時才對帳。${nextReveal}`;
+      $("mil-figure").textContent = "?";
+      milSub.textContent = current ? `每局結算才揭曉，第一次 ${fmtDay(current.reveal)}` : "每局結算才揭曉";
     }
   }
 
@@ -447,7 +476,8 @@
       ]);
       const st = derive(x, s);
       renderBoard(st);
-      renderSides(st, x);
+      renderCorners(st, x);
+      renderCountdown(st);
       renderHoldings(x);
       $("updated").textContent = `最後更新：${fmtDay(x.as_of)} 收盤。`;
       renderChart(st);

@@ -10,11 +10,11 @@
 <meta property="og:title" content="跟岳母的十年之約">
 <meta property="og:description" content="波段操作派 vs 大盤市值仔，各拿 100 萬，每半年一局，連續比十年。">
 <meta property="og:locale" content="zh_TW">
-<meta name="theme-color" content="#1E3A5F">
+<meta name="theme-color" content="#0B1626">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231E3A5F'/%3E%3Ctext x='16' y='23' font-family='Arial' font-weight='900' font-size='19' fill='%23FF6B35' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Huninn&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -22,14 +22,42 @@
 
 <header class="top wrap">
   <a class="brand" href="https://www.facebook.com/1468991118575441" rel="noopener">叉傑克 XJack</a>
-  <a class="top-link" href="https://xjack.tw" rel="noopener">xjack.tw</a>
+  <span class="views" id="views" hidden></span>
 </header>
 
 <main id="main">
   <section class="hero wrap">
-    <p class="eyebrow">2026/10/1 開打 · 每半年一局 · 連續十年</p>
-    <h1>跟岳母的十年之約</h1>
-    <p class="lede">岳母 aka 波段操作派，對上我 aka 大盤市值仔。各拿 100 萬，每半年比一次報酬率，每一局都公開在這裡。</p>
+    <p class="eyebrow">2026 → 2036 · 每半年一局 · 共 20 局</p>
+    <h1>跟岳母的<br class="br-m">十年之約</h1>
+    <p class="lede">各拿 100 萬，比投資報酬率。每一局的結果都公開在這裡，贏了不太敢笑，輸了也照貼。</p>
+  </section>
+
+  <section class="wrap" aria-label="對戰卡">
+    <div class="card-vs">
+      <article class="corner corner-mil">
+        <p class="corner-tag">岳母</p>
+        <h2>aka 波段操作派</h2>
+        <p class="style-line">自己選股、看準時機抓波段</p>
+        <blockquote>「那我來接手吧！」</blockquote>
+        <div class="now">
+          <p class="now-label">目前成績</p>
+          <p class="now-fig" id="mil-figure">?</p>
+          <p class="now-sub" id="mil-sub">每局結算才揭曉</p>
+        </div>
+      </article>
+      <div class="vs" aria-hidden="true"><span>VS</span></div>
+      <article class="corner corner-me">
+        <p class="corner-tag">我</p>
+        <h2>aka 大盤市值仔</h2>
+        <p class="style-line">70% 0050＋30% 009826，買了不動</p>
+        <blockquote>「就算是岳母，我也不怕！（誤」</blockquote>
+        <div class="now">
+          <p class="now-label">目前成績</p>
+          <p class="now-fig" id="me-figure">—</p>
+          <p class="now-sub" id="me-sub"></p>
+        </div>
+      </article>
+    </div>
   </section>
 
   <section class="wrap" aria-labelledby="board-title">
@@ -37,6 +65,11 @@
       <div class="board-head">
         <h2 id="board-title">比數板</h2>
         <p class="board-status" id="board-status">載入中…</p>
+      </div>
+      <div class="countdown" id="countdown" hidden>
+        <p class="cd-label" id="cd-label"></p>
+        <p class="cd-num"><span id="cd-days">0</span><small>天</small></p>
+        <p class="cd-sub" id="cd-sub"></p>
       </div>
       <div class="board-scroll" id="board-scroll" tabindex="0" aria-label="比數板，可左右捲動">
         <table class="ls" id="linescore">
@@ -47,23 +80,8 @@
     </div>
   </section>
 
-  <section class="wrap now" aria-label="目前成績">
-    <article class="side side-me">
-      <h2><span class="key key-me" aria-hidden="true"></span>我這邊<small>大盤市值仔</small></h2>
-      <p class="figure" id="me-figure">—</p>
-      <p class="delta" id="me-delta"></p>
-      <p class="side-note" id="me-note"></p>
-    </article>
-    <article class="side side-mil">
-      <h2><span class="key key-mil" aria-hidden="true"></span>岳母那邊<small>波段操作派</small></h2>
-      <p class="figure" id="mil-figure">結算才揭曉</p>
-      <p class="delta" id="mil-delta"></p>
-      <p class="side-note" id="mil-note"></p>
-    </article>
-  </section>
-
-  <section class="wrap" aria-labelledby="chart-title"><div class="card chart-card">
-    <div class="card-head">
+  <section class="wrap" aria-labelledby="chart-title"><div class="panel chart-card">
+    <div class="panel-head">
       <h2 id="chart-title">累計報酬走勢</h2>
       <p class="sub">從 2026/9/30 收盤起算</p>
     </div>
@@ -75,8 +93,8 @@
     <p class="note">岳母的帳戶只在結算日對帳，兩次結算之間用虛線連起來，不代表中間的真實走勢。</p>
   </div></section>
 
-  <section class="wrap" aria-labelledby="rules-title"><div class="card rules">
-    <h2 id="rules-title">怎麼比</h2>
+  <section class="wrap" aria-labelledby="rules-title"><div class="panel rules">
+    <h2 id="rules-title">比賽規則</h2>
     <dl>
       <dt>起點</dt>
       <dd>兩邊都從 2026/9/30 收盤起算，本金都當成 100 萬，比的是報酬率。我這邊一開始就扣掉買進手續費，所以起點比 100 萬少一點。</dd>
@@ -91,12 +109,12 @@
       <dt>價格</dt>
       <dd>一律用臺灣證券交易所的官方收盤價。</dd>
       <dt>局數</dt>
-      <dd>第 1 局只比三個月，到 2026/12/31；之後每年 6/30、12/31 各結算一局。結算日休市就用前一個交易日。</dd>
+      <dd>第 1 局只比三個月，到 2026/12/31；之後每年 6/30、12/31 各結算一局，共 20 局。結算日休市就用前一個交易日。</dd>
     </dl>
     <p class="fine">算法細節：兩邊都用淨值法，100 萬本金等於每單位 10 元。中途有資金進出就換算成單位數增減，所以存提款不會影響成績。台幣金額一律計到元，小數捨去。</p>
   </div></section>
 
-  <section class="wrap" aria-labelledby="hold-title"><div class="card holdings">
+  <section class="wrap" aria-labelledby="hold-title"><div class="panel holdings">
     <h2 id="hold-title">我的試算持股</h2>
     <div class="table-scroll">
       <table class="data" id="holdings">
@@ -107,15 +125,21 @@
       </table>
     </div>
     <p class="cash-note" id="cash-note"></p>
-    <h3>配息再投入紀錄</h3>
-    <ul class="divs" id="divs"></ul>
-    <h3>再平衡紀錄</h3>
-    <ul class="divs" id="rebs"></ul>
+    <div class="logs">
+      <div>
+        <h3>配息再投入</h3>
+        <ul class="log" id="divs"></ul>
+      </div>
+      <div>
+        <h3>再平衡</h3>
+        <ul class="log" id="rebs"></ul>
+      </div>
+    </div>
   </div></section>
 </main>
 
 <footer class="foot wrap">
-  <p>這不是投資建議，我也不是專家，只是公開記錄一個真實的實驗。每個人的資金、年期、能扛的風險都不一樣。</p>
+  <p class="disclaimer">這不是投資建議，我也不是專家，只是公開記錄一個真實的實驗。每個人的資金、年期、能扛的風險都不一樣。</p>
   <p>資料來源：臺灣證券交易所。<span id="updated"></span></p>
   <p class="sig">#叉傑克 XJack · <a href="https://www.facebook.com/1468991118575441" rel="noopener">FB 粉絲專頁</a> · <a href="https://xjack.tw" rel="noopener">xjack.tw</a></p>
 </footer>

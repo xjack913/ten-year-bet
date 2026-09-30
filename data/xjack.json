@@ -3,13 +3,30 @@
  "start_date": "2026-09-30",
  "capital": 1000000,
  "nav_base": 10,
+ "fee_rate": 0.001425,
+ "min_fee": 20,
+ "initial_buys": [
+  {
+   "code": "0050",
+   "shares": 6238,
+   "amount": 698967.9,
+   "fee": 996
+  },
+  {
+   "code": "009826",
+   "shares": 29867,
+   "amount": 299566.01,
+   "fee": 426
+  }
+ ],
+ "cash": 44.09,
  "holdings": [
   {
    "code": "0050",
    "name": "元大台灣50",
    "weight": 0.7,
    "base_close": 112.05,
-   "units": 6247.2111,
+   "shares": 6238,
    "last_close": 112.05
   },
   {
@@ -17,16 +34,13 @@
    "name": "貝萊德世界股票",
    "weight": 0.3,
    "base_close": 10.03,
-   "units": 29910.2692,
+   "shares": 29867,
    "last_close": 10.03
   }
  ],
  "dividends": [],
+ "updated_at": "2026-09-30T19:11+08:00",
  "series": [
-  [
-   "2026-09-30",
-   10.0
-  ]
- ],
- "updated_at": "2026-09-30T18:03+08:00"
+  ["2026-09-30", 9.9858]
+ ]
 }

@@ -79,9 +79,9 @@
     <h2 id="rules-title">怎麼比</h2>
     <dl>
       <dt>起點</dt>
-      <dd>兩邊都從 2026/9/30 收盤起算，本金都當成 100 萬，比的是報酬率。</dd>
+      <dd>兩邊都從 2026/9/30 收盤起算，本金都當成 100 萬，比的是報酬率。我這邊一開始就扣掉買進手續費，所以起點比 100 萬少一點。</dd>
       <dt>我</dt>
-      <dd>照 9/30 收盤價買 70% 0050＋30% 009826，之後不看盤、不買賣。配息在除息日用當天收盤價買回同一檔。這是試算帳本，每個交易日收盤後自動更新。</dd>
+      <dd>照 9/30 收盤價買整股：70% 0050＋30% 009826，手續費 0.1425%（最低 20 元），買不滿一股的零頭留著當現金。之後不看盤、不買賣。配息在除息日用當天收盤價買回同一檔整股，一樣扣手續費。這是試算帳本，每個交易日收盤後自動更新。</dd>
       <dt>岳母</dt>
       <dd>用她真實的證券帳戶，起點是 9/30 收盤的股票市值加現金。怎麼買賣都由她決定，每局結算時才對帳公開。</dd>
       <dt>存提款</dt>
@@ -91,7 +91,7 @@
       <dt>局數</dt>
       <dd>第 1 局只比三個月，到 2026/12/31；之後每年 6/30、12/31 各結算一局。結算日休市就用前一個交易日。</dd>
     </dl>
-    <p class="fine">算法細節：兩邊都用淨值法，起點每單位 10 元。中途有資金進出就換算成單位數增減，所以存提款不會影響成績。</p>
+    <p class="fine">算法細節：兩邊都用淨值法，100 萬本金等於每單位 10 元。中途有資金進出就換算成單位數增減，所以存提款不會影響成績。</p>
   </div></section>
 
   <section class="wrap" aria-labelledby="hold-title"><div class="card holdings">
@@ -99,11 +99,12 @@
     <div class="table-scroll">
       <table class="data" id="holdings">
         <thead>
-          <tr><th scope="col">標的</th><th scope="col" class="num">配置</th><th scope="col" class="num">9/30 收盤</th><th scope="col" class="num">目前股數</th></tr>
+          <tr><th scope="col">標的</th><th scope="col" class="num">9/30 收盤</th><th scope="col" class="num">目前股數</th><th scope="col" class="num">買進手續費</th></tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
+    <p class="cash-note" id="cash-note"></p>
     <h3>配息再投入紀錄</h3>
     <ul class="divs" id="divs"></ul>
   </div></section>

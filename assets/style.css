@@ -228,6 +228,7 @@ h1 {
 .data thead th { font-size: 13px; font-weight: 500; color: var(--muted); }
 .data .num { text-align: right; font-variant-numeric: tabular-nums; }
 .data td small { color: var(--muted); margin-left: 6px; }
+.cash-note { margin: 10px 0 0; font-size: 14px; color: var(--muted); }
 .divs { margin: 0; padding-left: 1.2em; color: var(--ink-2); font-size: 15px; }
 .divs li.empty { list-style: none; margin-left: -1.2em; color: var(--muted); }
 

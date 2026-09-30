@@ -2,7 +2,9 @@
 """每日更新「大盤市值仔」試算帳本。
 
 抓臺灣證券交易所的收盤價與除息資料，從起算日重算每日淨值，寫進 data/xjack.json。
-規則：起算日收盤價依權重買進、之後不買不賣；配息在除息日用當天收盤價再投入同一檔。
+規則：起算日收盤價依權重買整股、扣手續費，零頭留現金；之後不買不賣；
+配息在除息日用當天收盤價買回同一檔整股（一樣扣手續費），買不完的留現金。
+手續費 = 成交金額 × fee_rate，計到元、小數捨去，不足 min_fee 以 min_fee 計。
 
 遇到沒辦法自動處理的狀況（分割、股票股利、單日漲跌超過 25%、缺價）一律直接失敗，
 寧可網站停在舊資料，也不要公開錯的數字。
@@ -14,6 +16,7 @@ import sys
 import time
 import urllib.request
 from datetime import date, datetime, timedelta, timezone
+from decimal import ROUND_FLOOR, Decimal
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -150,38 +153,77 @@ def update_dividends(cfg, codes, today):
     return divs
 
 
+def D(x):
+    return Decimal(str(x))
+
+
+def fee_for(amount, cfg):
+    fee = (amount * D(cfg["fee_rate"])).to_integral_value(rounding=ROUND_FLOOR)
+    return max(fee, D(cfg["min_fee"]))
+
+
+def buy_whole(budget, price, cfg):
+    """budget 內含手續費能買到的最多整股，回傳（股數, 價金, 手續費）。"""
+    def cost(n):
+        amount = price * n
+        return amount, fee_for(amount, cfg)
+
+    n = int(budget / (price * (1 + D(cfg["fee_rate"]))))
+    while n > 0 and sum(cost(n)) > budget:
+        n -= 1
+    while sum(cost(n + 1)) <= budget:
+        n += 1
+    if n == 0:
+        return 0, D(0), D(0)
+    return (n, *cost(n))
+
+
 def compute(cfg, codes, prices, divs):
     start = date.fromisoformat(cfg["start_date"])
-    capital, nav_base = cfg["capital"], cfg["nav_base"]
-    units = {h["code"]: capital * h["weight"] / h["base_close"] for h in cfg["holdings"]}
-    series = [[start.isoformat(), float(nav_base)]]
-    applied = []
+    capital, nav_base = D(cfg["capital"]), D(cfg["nav_base"])
     last_price_date = max(prices)
 
-    for (ex_date, code), cash in sorted(divs.items()):
+    for (ex_date, code), _ in sorted(divs.items()):
         if ex_date not in prices and ex_date < last_price_date:
             fail(f"{code} 除息日 {ex_date} 沒有收盤價")
 
+    shares, cash, buys = {}, D(0), []
+    for h in cfg["holdings"]:
+        budget = capital * D(h["weight"])
+        n, amount, fee = buy_whole(budget, D(h["base_close"]), cfg)
+        shares[h["code"]] = n
+        cash += budget - amount - fee
+        buys.append({"code": h["code"], "shares": n, "amount": float(amount), "fee": int(fee)})
+
+    def nav_on(day):
+        value = sum(D(prices[day][c]) * shares[c] for c in codes) + cash
+        return float((value / capital * nav_base).quantize(Decimal("0.0001")))
+
+    series = [[start.isoformat(), nav_on(start)]]
+    applied = []
     for d in sorted(p for p in prices if p > start):
-        for (ex_date, code), cash in sorted(divs.items()):
+        for (ex_date, code), per_share in sorted(divs.items()):
             if ex_date != d:
                 continue
-            close = prices[d][code]
-            added = units[code] * cash / close
-            units[code] += added
-            applied.append({"ex_date": d.isoformat(), "code": code, "cash": cash,
-                            "close": close, "added_units": round(added, 4),
-                            "units_after": round(units[code], 4)})
-        value = sum(units[c] * prices[d][c] for c in codes)
-        series.append([d.isoformat(), round(value / capital * nav_base, 4)])
+            close = D(prices[d][code])
+            received = D(per_share) * shares[code]
+            cash += received
+            n, amount, fee = buy_whole(cash, close, cfg)
+            shares[code] += n
+            cash -= amount + fee
+            applied.append({"ex_date": d.isoformat(), "code": code, "per_share": per_share,
+                            "received": float(received), "close": float(close),
+                            "bought": n, "fee": int(fee), "shares_after": shares[code]})
+        series.append([d.isoformat(), nav_on(d)])
 
-    last = max(prices)
     holdings = [{"code": h["code"], "name": h["name"], "weight": h["weight"],
-                 "base_close": h["base_close"], "units": round(units[h["code"]], 4),
-                 "last_close": prices[last][h["code"]]} for h in cfg["holdings"]]
-    return {"as_of": last.isoformat(), "start_date": cfg["start_date"],
-            "capital": capital, "nav_base": nav_base, "holdings": holdings,
-            "dividends": applied, "series": series}
+                 "base_close": h["base_close"], "shares": shares[h["code"]],
+                 "last_close": prices[last_price_date][h["code"]]} for h in cfg["holdings"]]
+    return {"as_of": last_price_date.isoformat(), "start_date": cfg["start_date"],
+            "capital": cfg["capital"], "nav_base": cfg["nav_base"],
+            "fee_rate": cfg["fee_rate"], "min_fee": cfg["min_fee"],
+            "initial_buys": buys, "cash": float(cash.quantize(Decimal("0.01"))),
+            "holdings": holdings, "dividends": applied, "series": series}
 
 
 def dump(result):

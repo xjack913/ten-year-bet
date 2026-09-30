@@ -15,7 +15,8 @@
   const pct = (r, dp = 2) => `${sign(r)}${Math.abs(r * 100).toFixed(dp)}%`;
   const boardNum = (r) => `${sign(r)}${Math.abs(r * 100).toFixed(1)}`;
   const wan = (nav, base) => `${(nav / base * 100).toFixed(2)} 萬`;
-  const units = (n) => n.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  const int = (n) => n.toLocaleString("en-US");
+  const money = (n) => n.toLocaleString("en-US", { maximumFractionDigits: 2 });
 
   function el(tag, attrs = {}, text) {
     const e = document.createElement(tag);
@@ -153,18 +154,16 @@
     node.textContent = `${prefix} ${r > 0.00005 ? "▲" : r < -0.00005 ? "▼" : ""} ${pct(r)}`.replace("  ", " ");
   }
 
-  function renderSides(st) {
+  function renderSides(st, x) {
     const { latest, series, base, settled, current } = st;
     const figMe = $("me-figure");
     figMe.replaceChildren();
+    figMe.append(el("span", { class: "from" }, "100 萬 →"), document.createTextNode(wan(latest.nav, base)));
+    setDelta($("me-delta"), latest.r, "累計");
     if (series.length === 1) {
-      figMe.textContent = "100 萬";
-      $("me-delta").className = "delta flat";
-      $("me-delta").textContent = `${fmtMD(nextDay(latest.d))} 開打`;
-      $("me-note").textContent = "第一個交易日收盤後開始自動更新。";
+      const fees = x.initial_buys.reduce((s, b) => s + b.fee, 0);
+      $("me-note").textContent = `${fmtMD(latest.d)} 收盤買進，手續費 ${int(fees)} 元已經扣掉。${fmtMD(nextDay(latest.d))} 開打，之後每個交易日自動更新。`;
     } else {
-      figMe.append(el("span", { class: "from" }, "100 萬 →"), document.createTextNode(wan(latest.nav, base)));
-      setDelta($("me-delta"), latest.r, "累計");
       $("me-note").textContent = `截至 ${fmtDay(latest.d)} 收盤，每個交易日自動更新。`;
     }
 
@@ -402,15 +401,17 @@
     const tbody = $("holdings").querySelector("tbody");
     tbody.replaceChildren();
     for (const h of x.holdings) {
+      const buy = x.initial_buys.find((b) => b.code === h.code);
       const tr = el("tr");
       const name = el("td", {}, h.code);
-      name.append(el("small", {}, h.name));
+      name.append(el("small", {}, `${h.name} ${Math.round(h.weight * 100)}%`));
       tr.append(name,
-        el("td", { class: "num" }, `${Math.round(h.weight * 100)}%`),
         el("td", { class: "num" }, h.base_close.toFixed(2)),
-        el("td", { class: "num" }, units(h.units)));
+        el("td", { class: "num" }, int(h.shares)),
+        el("td", { class: "num" }, int(buy.fee)));
       tbody.append(tr);
     }
+    $("cash-note").textContent = `零頭現金 ${money(x.cash)} 元（買不滿一股的部分，不計利息）。`;
     const list = $("divs");
     list.replaceChildren();
     if (!x.dividends.length) {
@@ -418,7 +419,8 @@
       return;
     }
     for (const d of x.dividends) {
-      list.append(el("li", {}, `${fmtDay(d.ex_date)} ${d.code} 每股配 ${d.cash} 元，用當天收盤 ${d.close} 元買回 ${units(d.added_units)} 股`));
+      const bought = d.bought ? `用當天收盤 ${d.close} 元買回 ${int(d.bought)} 股（手續費 ${d.fee} 元）` : "不夠買一股，先留著當現金";
+      list.append(el("li", {}, `${fmtDay(d.ex_date)} ${d.code} 每股配 ${d.per_share} 元，共 ${money(d.received)} 元，${bought}`));
     }
   }
 
@@ -432,7 +434,7 @@
       ]);
       const st = derive(x, s);
       renderBoard(st);
-      renderSides(st);
+      renderSides(st, x);
       renderHoldings(x);
       $("updated").textContent = `最後更新：${fmtDay(x.as_of)} 收盤。`;
       renderChart(st);

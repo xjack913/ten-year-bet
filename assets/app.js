@@ -206,8 +206,10 @@
       milSub.replaceChildren(document.createTextNode("累計 "), deltaSpan(last.mil_nav / base - 1),
         document.createTextNode(`，第 ${last.n} 局結算`));
     } else {
-      $("mil-figure").textContent = "?";
-      milSub.textContent = current ? `每局結算才揭曉，第一次 ${fmtDay(current.reveal)}` : "每局結算才揭曉";
+      // 還沒結算過：顯示起點 100 萬（她是既有帳戶，起點沒有買進手續費）
+      setFigure($("mil-figure"), base, base);
+      milSub.replaceChildren(document.createTextNode(
+        `${fmtMD(st.series[0].d)} 起點，每局結算才更新${current ? `，第一次 ${fmtDay(current.reveal)}` : ""}`));
     }
   }
 

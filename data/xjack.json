@@ -1,0 +1,32 @@
+{
+ "as_of": "2026-09-30",
+ "start_date": "2026-09-30",
+ "capital": 1000000,
+ "nav_base": 10,
+ "holdings": [
+  {
+   "code": "0050",
+   "name": "元大台灣50",
+   "weight": 0.7,
+   "base_close": 112.05,
+   "units": 6247.2111,
+   "last_close": 112.05
+  },
+  {
+   "code": "009826",
+   "name": "貝萊德世界股票",
+   "weight": 0.3,
+   "base_close": 10.03,
+   "units": 29910.2692,
+   "last_close": 10.03
+  }
+ ],
+ "dividends": [],
+ "series": [
+  [
+   "2026-09-30",
+   10.0
+  ]
+ ],
+ "updated_at": "2026-09-30T18:03+08:00"
+}

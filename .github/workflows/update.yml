@@ -1,0 +1,67 @@
+name: 每日更新與部署
+
+on:
+  schedule:
+    - cron: "30 7 * * 1-5" # 週一到週五 15:30（台北時間），證交所收盤資料已公布
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: 抓收盤價、重算淨值
+        if: github.event_name != 'push'
+        run: python scripts/update_xjack.py
+
+      - name: 有新資料就 commit
+        id: commit
+        if: github.event_name != 'push'
+        run: |
+          if git diff --quiet -- data; then
+            echo "沒有新資料"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          as_of=$(python -c 'import json; print(json.load(open("data/xjack.json", encoding="utf-8"))["as_of"])')
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git commit -m "data: 更新到 ${as_of}"
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: update
+    if: github.event_name != 'schedule' || needs.update.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

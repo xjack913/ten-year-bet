@@ -1,0 +1,206 @@
+{
+  "nav_base": 10,
+  "note": "每局結算後填入 settled_on（實際結算交易日）、xjack_nav、mil_nav、post_url；兩個淨值都有值才算完賽。數字來源：XJack 私人帳本 ledger.csv。",
+  "rounds": [
+    {
+      "n": 1,
+      "start": "2026-09-30",
+      "end": "2026-12-31",
+      "reveal": "2027-01-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 2,
+      "start": "2026-12-31",
+      "end": "2027-06-30",
+      "reveal": "2027-07-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 3,
+      "start": "2027-06-30",
+      "end": "2027-12-31",
+      "reveal": "2028-01-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 4,
+      "start": "2027-12-31",
+      "end": "2028-06-30",
+      "reveal": "2028-07-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 5,
+      "start": "2028-06-30",
+      "end": "2028-12-31",
+      "reveal": "2029-01-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 6,
+      "start": "2028-12-31",
+      "end": "2029-06-30",
+      "reveal": "2029-07-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 7,
+      "start": "2029-06-30",
+      "end": "2029-12-31",
+      "reveal": "2030-01-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 8,
+      "start": "2029-12-31",
+      "end": "2030-06-30",
+      "reveal": "2030-07-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 9,
+      "start": "2030-06-30",
+      "end": "2030-12-31",
+      "reveal": "2031-01-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 10,
+      "start": "2030-12-31",
+      "end": "2031-06-30",
+      "reveal": "2031-07-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 11,
+      "start": "2031-06-30",
+      "end": "2031-12-31",
+      "reveal": "2032-01-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 12,
+      "start": "2031-12-31",
+      "end": "2032-06-30",
+      "reveal": "2032-07-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 13,
+      "start": "2032-06-30",
+      "end": "2032-12-31",
+      "reveal": "2033-01-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 14,
+      "start": "2032-12-31",
+      "end": "2033-06-30",
+      "reveal": "2033-07-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 15,
+      "start": "2033-06-30",
+      "end": "2033-12-31",
+      "reveal": "2034-01-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 16,
+      "start": "2033-12-31",
+      "end": "2034-06-30",
+      "reveal": "2034-07-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 17,
+      "start": "2034-06-30",
+      "end": "2034-12-31",
+      "reveal": "2035-01-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 18,
+      "start": "2034-12-31",
+      "end": "2035-06-30",
+      "reveal": "2035-07-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 19,
+      "start": "2035-06-30",
+      "end": "2035-12-31",
+      "reveal": "2036-01-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    },
+    {
+      "n": 20,
+      "start": "2035-12-31",
+      "end": "2036-06-30",
+      "reveal": "2036-07-01",
+      "settled_on": null,
+      "xjack_nav": null,
+      "mil_nav": null,
+      "post_url": null
+    }
+  ]
+}

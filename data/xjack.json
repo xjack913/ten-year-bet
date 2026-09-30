@@ -5,21 +5,26 @@
  "nav_base": 10,
  "fee_rate": 0.001425,
  "min_fee": 20,
+ "rebalance": {
+  "month": 1,
+  "from_year": 2028,
+  "sell_tax_rate": 0.001
+ },
  "initial_buys": [
   {
    "code": "0050",
    "shares": 6238,
-   "amount": 698967.9,
+   "amount": 698967,
    "fee": 996
   },
   {
    "code": "009826",
    "shares": 29867,
-   "amount": 299566.01,
+   "amount": 299566,
    "fee": 426
   }
  ],
- "cash": 44.09,
+ "cash": 45,
  "holdings": [
   {
    "code": "0050",
@@ -39,7 +44,8 @@
   }
  ],
  "dividends": [],
- "updated_at": "2026-09-30T19:11+08:00",
+ "rebalances": [],
+ "updated_at": "2026-09-30T19:29+08:00",
  "series": [
   ["2026-09-30", 9.9858]
  ]

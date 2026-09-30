@@ -411,7 +411,20 @@
         el("td", { class: "num" }, int(buy.fee)));
       tbody.append(tr);
     }
-    $("cash-note").textContent = `零頭現金 ${money(x.cash)} 元（買不滿一股的部分，不計利息）。`;
+    $("cash-note").textContent = `零頭現金 ${int(x.cash)} 元（買不滿一股的部分，不計利息）。`;
+
+    const rebs = $("rebs");
+    rebs.replaceChildren();
+    if (!x.rebalances.length) {
+      rebs.append(el("li", { class: "empty" }, `第一次再平衡在 ${x.rebalance.from_year} 年第一個交易日。`));
+    }
+    for (const r of x.rebalances) {
+      const parts = r.trades.map((t) => t.side === "sell"
+        ? `賣 ${t.code} ${int(t.shares)} 股（手續費 ${t.fee} 元、證交稅 ${t.tax} 元）`
+        : `買 ${t.code} ${int(t.shares)} 股（手續費 ${t.fee} 元）`);
+      rebs.append(el("li", {}, `${fmtDay(r.date)}：${parts.length ? parts.join("，") : "比例剛好，不用調"}`));
+    }
+
     const list = $("divs");
     list.replaceChildren();
     if (!x.dividends.length) {

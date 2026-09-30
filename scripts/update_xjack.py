@@ -2,9 +2,12 @@
 """每日更新「大盤市值仔」試算帳本。
 
 抓臺灣證券交易所的收盤價與除息資料，從起算日重算每日淨值，寫進 data/xjack.json。
-規則：起算日收盤價依權重買整股、扣手續費，零頭留現金；之後不買不賣；
+規則：起算日收盤價依權重買整股、扣手續費，零頭留現金；平常不買不賣；
 配息在除息日用當天收盤價買回同一檔整股（一樣扣手續費），買不完的留現金。
-手續費 = 成交金額 × fee_rate，計到元、小數捨去，不足 min_fee 以 min_fee 計。
+每年 rebalance.month 月第一個交易日（from_year 起）用收盤價再平衡回目標權重：
+先賣超配的整股（扣手續費＋證交稅），再用現金買低配的整股（扣手續費）。
+台幣一律計到元、小數捨去：成交價金 = 股數 × 價格；配息 = 股數 × 每股配息；
+手續費 = 成交價金 × fee_rate，不足 min_fee 以 min_fee 計；證交稅 = 賣出價金 × sell_tax_rate。
 
 遇到沒辦法自動處理的狀況（分割、股票股利、單日漲跌超過 25%、缺價）一律直接失敗，
 寧可網站停在舊資料，也不要公開錯的數字。
@@ -157,15 +160,19 @@ def D(x):
     return Decimal(str(x))
 
 
+def ntd(x):
+    """台幣計到元、小數捨去。"""
+    return x.to_integral_value(rounding=ROUND_FLOOR)
+
+
 def fee_for(amount, cfg):
-    fee = (amount * D(cfg["fee_rate"])).to_integral_value(rounding=ROUND_FLOOR)
-    return max(fee, D(cfg["min_fee"]))
+    return max(ntd(amount * D(cfg["fee_rate"])), D(cfg["min_fee"]))
 
 
 def buy_whole(budget, price, cfg):
     """budget 內含手續費能買到的最多整股，回傳（股數, 價金, 手續費）。"""
     def cost(n):
-        amount = price * n
+        amount = ntd(price * n)
         return amount, fee_for(amount, cfg)
 
     n = int(budget / (price * (1 + D(cfg["fee_rate"]))))
@@ -176,6 +183,39 @@ def buy_whole(budget, price, cfg):
     if n == 0:
         return 0, D(0), D(0)
     return (n, *cost(n))
+
+
+def rebalance(day, shares, cash, px, cfg):
+    """再平衡回目標權重，直接改 shares，回傳（新現金, 交易紀錄）。"""
+    weights = {h["code"]: D(h["weight"]) for h in cfg["holdings"]}
+    tax_rate = D(cfg["rebalance"]["sell_tax_rate"])
+    total = sum(px[c] * shares[c] for c in shares) + cash
+    trades = []
+    for c in shares:
+        excess = px[c] * shares[c] - total * weights[c]
+        n = int(excess / px[c]) if excess > 0 else 0
+        if n <= 0:
+            continue
+        amount = ntd(px[c] * n)
+        fee = fee_for(amount, cfg)
+        tax = ntd(amount * tax_rate)
+        shares[c] -= n
+        cash += amount - fee - tax
+        trades.append({"code": c, "side": "sell", "shares": n, "price": float(px[c]),
+                       "amount": int(amount), "fee": int(fee), "tax": int(tax)})
+    for c in shares:
+        gap = total * weights[c] - px[c] * shares[c]
+        if gap <= 0:
+            continue
+        n, amount, fee = buy_whole(min(cash, gap), px[c], cfg)
+        if n == 0:
+            continue
+        shares[c] += n
+        cash -= amount + fee
+        trades.append({"code": c, "side": "buy", "shares": n, "price": float(px[c]),
+                       "amount": int(amount), "fee": int(fee), "tax": 0})
+    return cash, {"date": day.isoformat(), "trades": trades,
+                  "shares_after": dict(shares), "cash_after": int(cash)}
 
 
 def compute(cfg, codes, prices, divs):
@@ -193,27 +233,32 @@ def compute(cfg, codes, prices, divs):
         n, amount, fee = buy_whole(budget, D(h["base_close"]), cfg)
         shares[h["code"]] = n
         cash += budget - amount - fee
-        buys.append({"code": h["code"], "shares": n, "amount": float(amount), "fee": int(fee)})
+        buys.append({"code": h["code"], "shares": n, "amount": int(amount), "fee": int(fee)})
 
     def nav_on(day):
         value = sum(D(prices[day][c]) * shares[c] for c in codes) + cash
         return float((value / capital * nav_base).quantize(Decimal("0.0001")))
 
     series = [[start.isoformat(), nav_on(start)]]
-    applied = []
+    applied, rebalances, rebalanced_years = [], [], set()
+    rb = cfg.get("rebalance")
     for d in sorted(p for p in prices if p > start):
         for (ex_date, code), per_share in sorted(divs.items()):
             if ex_date != d:
                 continue
             close = D(prices[d][code])
-            received = D(per_share) * shares[code]
+            received = ntd(D(per_share) * shares[code])
             cash += received
             n, amount, fee = buy_whole(cash, close, cfg)
             shares[code] += n
             cash -= amount + fee
             applied.append({"ex_date": d.isoformat(), "code": code, "per_share": per_share,
-                            "received": float(received), "close": float(close),
+                            "received": int(received), "close": float(close),
                             "bought": n, "fee": int(fee), "shares_after": shares[code]})
+        if rb and d.month == rb["month"] and d.year >= rb["from_year"] and d.year not in rebalanced_years:
+            rebalanced_years.add(d.year)
+            cash, record = rebalance(d, shares, cash, {c: D(prices[d][c]) for c in codes}, cfg)
+            rebalances.append(record)
         series.append([d.isoformat(), nav_on(d)])
 
     holdings = [{"code": h["code"], "name": h["name"], "weight": h["weight"],
@@ -221,9 +266,10 @@ def compute(cfg, codes, prices, divs):
                  "last_close": prices[last_price_date][h["code"]]} for h in cfg["holdings"]]
     return {"as_of": last_price_date.isoformat(), "start_date": cfg["start_date"],
             "capital": cfg["capital"], "nav_base": cfg["nav_base"],
-            "fee_rate": cfg["fee_rate"], "min_fee": cfg["min_fee"],
-            "initial_buys": buys, "cash": float(cash.quantize(Decimal("0.01"))),
-            "holdings": holdings, "dividends": applied, "series": series}
+            "fee_rate": cfg["fee_rate"], "min_fee": cfg["min_fee"], "rebalance": rb,
+            "initial_buys": buys, "cash": int(cash),
+            "holdings": holdings, "dividends": applied, "rebalances": rebalances,
+            "series": series}
 
 
 def dump(result):

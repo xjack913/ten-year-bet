@@ -4,6 +4,7 @@
   "nav_base": 10,
   "fee_rate": 0.001425,
   "min_fee": 20,
+  "rebalance": { "month": 1, "from_year": 2028, "sell_tax_rate": 0.001 },
   "holdings": [
     { "code": "0050", "name": "元大台灣50", "weight": 0.7, "base_close": 112.05 },
     { "code": "009826", "name": "貝萊德世界股票", "weight": 0.3, "base_close": 10.03 }

@@ -472,9 +472,10 @@
   // 正式網址才計數；同一個分頁工作階段只算一次，重新整理不重複 +1
   const COUNTER_URL = "https://bet-api.xjack.tw/views";
   async function renderViews() {
+    if (location.hostname !== "bet.xjack.tw") return; // 本機預覽不接計數器（只收正式網址）
     let counted = false;
     try { counted = sessionStorage.getItem("bet-viewed") === "1"; } catch (e) { /* 無痕或封鎖儲存時照常顯示 */ }
-    const post = location.hostname === "bet.xjack.tw" && !counted;
+    const post = !counted;
     try {
       const r = await fetch(COUNTER_URL, { method: post ? "POST" : "GET", cache: "no-store" });
       if (!r.ok) return;

@@ -51,6 +51,9 @@ jobs:
 
       - uses: actions/configure-pages@v5
 
+      - name: 資源網址加版本號，避免瀏覽器拿到舊的 CSS／JS
+        run: sed -i "s/__V__/$(git rev-parse --short HEAD)/g" index.html
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .

@@ -97,7 +97,7 @@
     const tbody = el("tbody");
     const rows = [
       { key: "mil", name: "岳母", tag: "波段操作派", ret: "milRet", nav: "mil_nav" },
-      { key: "me", name: "我", tag: "大盤市值仔", ret: "meRet", nav: "xjack_nav" },
+      { key: "me", name: "叉傑克", tag: "大盤市值仔", ret: "meRet", nav: "xjack_nav" },
     ];
     let lit = 0;
     const litAttrs = (cls) => ({ class: `${cls || ""} lit`.trim(), style: `--i:${lit++}` });
@@ -114,7 +114,7 @@
           td = el("td", { ...litAttrs(cls), "aria-label": `第 ${r.n} 局 ${row.name} ${pct(v, 1)}${r.winner === row.key ? "，勝" : ""}` }, boardNum(v));
         } else if (current && r.n === current.n && phase !== "pre") {
           td = row.key === "me"
-            ? el("td", { ...litAttrs("live"), "aria-label": `第 ${r.n} 局 我 目前 ${pct(meLive, 1)}` }, boardNum(meLive))
+            ? el("td", { ...litAttrs("live"), "aria-label": `第 ${r.n} 局 叉傑克 目前 ${pct(meLive, 1)}` }, boardNum(meLive))
             : el("td", { ...litAttrs("hidden-val"), "aria-label": `第 ${r.n} 局 岳母 結算時揭曉` }, "?");
         } else if (current && r.n === current.n) {
           td = el("td", { class: "pregame", "aria-label": `第 ${r.n} 局 即將開打` }, "開打");
@@ -311,7 +311,7 @@
     if (milPts.length > 1) {
       svg.append(sv("path", { class: "line-mil", d: milPts.map((p, i) => `${i ? "L" : "M"}${X(p.t).toFixed(1)},${Y(p.r).toFixed(1)}`).join("") }));
     }
-    // 我：每日
+    // 叉傑克：每日
     if (series.length > 1) {
       svg.append(sv("path", { class: "line-me", d: series.map((p, i) => `${i ? "L" : "M"}${X(p.t).toFixed(1)},${Y(p.r).toFixed(1)}`).join("") }));
     }
@@ -321,14 +321,14 @@
 
     // 端點標籤
     const labels = [];
-    if (series.length > 1) labels.push({ x: X(end.t), y: Y(end.r), name: "我", v: pct(end.r) });
+    if (series.length > 1) labels.push({ x: X(end.t), y: Y(end.r), name: "叉傑克", v: pct(end.r) });
     if (milPts.length > 1) { const m = milPts[milPts.length - 1]; labels.push({ x: X(m.t), y: Y(m.r), name: "岳母", v: pct(m.r) }); }
     if (labels.length === 2 && Math.abs(labels[0].y - labels[1].y) < 30) {
       const [a, b] = labels[0].y <= labels[1].y ? labels : [labels[1], labels[0]];
       a.dy = -12; b.dy = 22;
     }
     for (const L of labels) {
-      const right = L.x > W - M.right - 96;
+      const right = L.x > W - M.right - 130;
       const t = sv("text", { class: "end-label", x: L.x + (right ? -10 : 10), y: L.y + (L.dy ?? -10), "text-anchor": right ? "end" : "start" });
       t.append(sv("tspan", {}, `${L.name} `), sv("tspan", { class: "end-label-sub" }, L.v));
       svg.append(t);
@@ -375,7 +375,7 @@
       return r;
     };
     const css = getComputedStyle(document.documentElement);
-    tip.append(row(css.getPropertyValue("--me"), pct(p.r), "我"));
+    tip.append(row(css.getPropertyValue("--me"), pct(p.r), "叉傑克"));
     const m = cs.milPts.find((q) => q.d === p.d);
     if (m) tip.append(row(css.getPropertyValue("--mil"), pct(m.r), "岳母"));
     tip.hidden = false;

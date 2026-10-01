@@ -302,7 +302,7 @@ h1 {
 /* 中文詞組不從中間斷行 */
 .nb { white-space: nowrap; }
 
-/* 岳母名字旁的身分小標籤 */
+/* 名字旁的身分小標籤 */
 .kin {
   display: table; margin: 2px 0 4px; padding: 1px 10px;
   border-radius: 999px; background: #FFEFE7; color: var(--orange-text);

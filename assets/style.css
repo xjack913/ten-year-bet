@@ -309,3 +309,4 @@ h1 {
   font-family: var(--f-zh); font-size: 15px; font-weight: 700; line-height: 1.6; letter-spacing: .02em;
 }
 @media (min-width: 720px) { .kin { display: inline-block; margin: 0 0 0 10px; vertical-align: 6px; } }
+.corner-me .kin { background: #E8EFF8; color: var(--blue-text); }

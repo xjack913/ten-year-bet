@@ -99,10 +99,38 @@ h1 {
 .corner h2 { margin: 2px 0 0; font-size: 20px; font-weight: 700; }
 .corner-mil h2 { color: var(--orange-text); }
 .corner-me h2 { color: var(--blue-text); }
-.style-line { margin: 10px 0 0; font-size: 17px; color: var(--ink-2); }
-.corner blockquote { margin: 14px 0 0; font-family: var(--f-round); font-size: 22px; line-height: 1.5; color: var(--ink); }
+.style-line { margin: 8px 0 0; font-size: 17px; line-height: 1.55; color: var(--ink-2); }
 
-.now { margin-top: 18px; padding-top: 16px; border-top: 2px dashed var(--line); }
+/* 站位：人物站在代表色的地板線上；岳母在右、我在左，隔著 VS 面對面 */
+.stage {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; column-gap: 12px;
+  border-bottom: 4px solid var(--orange);
+}
+.corner-me .stage { grid-template-columns: auto minmax(0, 1fr); border-bottom-color: var(--navy); }
+.corner-me .avatar { order: -1; }
+.corner-id { padding-bottom: 14px; }
+.avatar { display: block; line-height: 0; }
+.avatar img { display: block; height: 172px; width: auto; max-width: 46vw; object-fit: contain; object-position: bottom; }
+@media (min-width: 720px) { .avatar img { height: 220px; max-width: none; } }
+
+/* 台詞對話框：尖角指向照片裡的人 */
+.bubble {
+  position: relative; margin: 18px 0 0; padding: 12px 16px;
+  border-radius: 14px; font-family: var(--f-round); font-size: 21px; line-height: 1.45; color: var(--ink);
+}
+.corner-mil .bubble { background: #FFEFE7; }
+.corner-me .bubble { background: #E8EFF8; }
+.bubble::before {
+  content: ""; position: absolute; top: -10px; width: 20px; height: 20px; transform: rotate(45deg); background: inherit;
+}
+.corner-mil .bubble::before { right: 64px; }
+.corner-me .bubble::before { left: 64px; }
+@media (min-width: 720px) {
+  .corner-mil .bubble::before { right: 80px; }
+  .corner-me .bubble::before { left: 70px; }
+}
+
+.now { margin-top: 18px; }
 .now-label { margin: 0; font-size: 15px; font-weight: 700; color: var(--muted); letter-spacing: .06em; }
 .now-fig { margin: 0; font-family: var(--f-num); font-weight: 900; font-size: 54px; line-height: 1.05; letter-spacing: .01em; color: var(--ink); }
 .now-fig small { font-family: var(--f-zh); font-size: 20px; font-weight: 700; margin-left: 4px; }
@@ -270,3 +298,6 @@ h1 {
 @media (prefers-reduced-motion: reduce) {
   .board-status .dot { animation: none; }
 }
+
+/* 中文詞組不從中間斷行 */
+.nb { white-space: nowrap; }

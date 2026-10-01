@@ -110,8 +110,8 @@ h1 {
 .corner-me .avatar { order: -1; }
 .corner-id { padding-bottom: 14px; }
 .avatar { display: block; line-height: 0; }
-.avatar img { display: block; height: 172px; width: auto; max-width: 46vw; object-fit: contain; object-position: bottom; }
-@media (min-width: 720px) { .avatar img { height: 220px; max-width: none; } }
+.avatar img { display: block; height: 150px; width: auto; max-width: 46vw; object-fit: contain; object-position: bottom; }
+@media (min-width: 720px) { .avatar img { height: 180px; max-width: none; } }
 
 /* 台詞對話框：尖角指向照片裡的人 */
 .bubble {
@@ -123,11 +123,11 @@ h1 {
 .bubble::before {
   content: ""; position: absolute; top: -10px; width: 20px; height: 20px; transform: rotate(45deg); background: inherit;
 }
-.corner-mil .bubble::before { right: 64px; }
-.corner-me .bubble::before { left: 64px; }
+.corner-mil .bubble::before { right: 61px; }
+.corner-me .bubble::before { left: 47px; }
 @media (min-width: 720px) {
-  .corner-mil .bubble::before { right: 80px; }
-  .corner-me .bubble::before { left: 70px; }
+  .corner-mil .bubble::before { right: 75px; }
+  .corner-me .bubble::before { left: 58px; }
 }
 
 .now { margin-top: 18px; }

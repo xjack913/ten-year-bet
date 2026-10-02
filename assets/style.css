@@ -149,6 +149,114 @@ h1 {
 }
 @media (min-width: 720px) { .vs { margin: 0 -14px; } }
 
+/* 場邊押注：兩顆大按鈕選邊、確認後換成下注單，下面是人氣條和歷屆紀錄 */
+.pick-eyebrow { margin: 0 0 2px; font-size: 16px; font-weight: 700; letter-spacing: .08em; color: var(--orange-text); }
+.panel.pick h2 { font-family: var(--f-round); font-weight: 400; font-size: 30px; line-height: 1.3; color: var(--navy); }
+.pick .sub { margin-top: 6px; color: var(--ink-2); }
+
+.pick-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+.pick-btns[hidden] { display: none; }
+.pick-btn {
+  display: grid; justify-items: center; align-content: start; gap: 2px;
+  padding: 16px 8px 14px; border: 3px solid; border-radius: 14px;
+  font: inherit; color: var(--ink); text-align: center; cursor: pointer;
+  transition: transform .15s ease-out, box-shadow .15s ease-out, background-color .15s ease-out;
+}
+.pick-mil { border-color: var(--mil); background: #FFF6F2; }
+.pick-me { border-color: var(--me); background: #F2F6FB; }
+.pick-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 24px -16px rgba(15, 30, 51, .7); }
+.pick-mil:hover:not(:disabled), .pick-mil[aria-pressed="true"] { background: #FFE4D7; }
+.pick-me:hover:not(:disabled), .pick-me[aria-pressed="true"] { background: #DCE7F5; }
+.pick-mil[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--card), 0 0 0 6px var(--mil); }
+.pick-me[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--card), 0 0 0 6px var(--me); }
+.pick-btn:disabled { cursor: default; opacity: .6; }
+
+.face { display: block; width: 72px; height: 72px; flex: none; border-radius: 50%; overflow: hidden; line-height: 0; background: var(--card); }
+.face img { width: 100%; height: 100%; object-fit: cover; }
+.pick-mil .face, .t-mil .face { box-shadow: 0 0 0 3px var(--mil); }
+.pick-me .face, .t-me .face { box-shadow: 0 0 0 3px var(--me); }
+.pick-name { margin-top: 8px; font-family: var(--f-round); font-size: 24px; line-height: 1.25; }
+.pick-aka { font-size: 15px; font-weight: 700; line-height: 1.4; }
+.pick-mil .pick-aka { color: var(--orange-text); }
+.pick-me .pick-aka { color: var(--blue-text); }
+@media (min-width: 720px) {
+  .pick-btn { grid-template-columns: auto 1fr; justify-items: start; align-items: center; column-gap: 16px; padding: 16px 20px; text-align: left; }
+  .pick-btn .face { grid-row: span 2; width: 84px; height: 84px; }
+  .pick-name { margin-top: 0; align-self: end; font-size: 26px; }
+  .pick-aka { align-self: start; }
+}
+
+.confirm { margin-top: 14px; padding: 16px; border-radius: 12px; background: #FFF8E6; border: 1px solid #EED9A4; }
+.confirm[hidden] { display: none; }
+.confirm p { margin: 0; font-size: 19px; font-weight: 700; }
+.confirm-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.btn-go, .btn-back { min-height: 52px; padding: 0 22px; border-radius: 12px; font: inherit; font-size: 19px; font-weight: 700; cursor: pointer; }
+.btn-go { border: 0; color: #fff; }
+.btn-go:disabled { opacity: .6; cursor: progress; }
+.go-mil { background: var(--orange-text); }
+.go-me { background: var(--navy); }
+.btn-back { background: var(--card); color: var(--ink); border: 2px solid #AEBBCB; }
+
+.ticket {
+  display: flex; align-items: center; gap: 14px; margin-top: 18px; padding: 16px;
+  border: 2px dashed var(--mil); border-radius: 14px; background: #FFF6F2;
+}
+.ticket[hidden] { display: none; }
+.ticket.t-me { border-color: var(--me); background: #F2F6FB; }
+.ticket:focus { outline: none; }
+.ticket .face { width: 56px; height: 56px; }
+.ticket-body { min-width: 0; }
+.ticket-title { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: .06em; color: var(--muted); }
+.ticket-pick { margin: 0; font-family: var(--f-round); font-size: 26px; line-height: 1.3; }
+.ticket-meta { margin: 0; font-size: 15px; line-height: 1.5; color: var(--muted); }
+.ticket-meta span { display: inline-block; margin-right: 12px; white-space: nowrap; }
+.ticket-stamp {
+  margin-left: auto; flex: none; display: grid; place-items: center; width: 66px; height: 66px;
+  border: 3px solid var(--up); border-radius: 50%; color: var(--up);
+  font-size: 16px; font-weight: 900; line-height: 1.15; text-align: center; transform: rotate(-14deg);
+}
+@media (min-width: 720px) {
+  .ticket { gap: 18px; padding: 18px 24px; }
+  .ticket .face { width: 68px; height: 68px; }
+  .ticket-stamp { width: 78px; height: 78px; font-size: 18px; margin-right: 8px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ticket.just .ticket-stamp { animation: stamp .45s cubic-bezier(.2, 1.5, .4, 1) .15s both; }
+  @keyframes stamp { from { transform: rotate(-14deg) scale(2.2); opacity: 0; } to { transform: rotate(-14deg) scale(1); opacity: 1; } }
+}
+
+.pick-msg { margin: 10px 0 0; font-size: 17px; font-weight: 700; color: var(--ink); }
+.pick-msg:empty { display: none; }
+
+.tug { margin-top: 22px; }
+.tug[hidden] { display: none; }
+.tug-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 17px; font-weight: 700; }
+.tug-head b { font-family: var(--f-num); font-size: 32px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.t-mil { color: var(--orange-text); }
+.t-me { color: var(--blue-text); }
+.tug-bar { display: flex; height: 18px; margin-top: 2px; border-radius: 999px; overflow: hidden; background: var(--me); }
+.tug-mil { width: 50%; background: var(--mil); transition: width .6s ease-out; }
+.tug-bar.split .tug-mil { border-right: 3px solid var(--card); }
+.tug-bar.empty { background: var(--grid); }
+.tug-bar.empty .tug-mil { background: transparent; border-right: 2px dashed #AEBBCB; }
+.tug-foot { display: flex; justify-content: space-between; margin-top: 4px; font-size: 16px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.odds { margin: 10px 0 0; font-size: 16px; color: var(--ink-2); }
+.pick-rules { margin: 14px 0 0; font-size: 15px; color: var(--muted); }
+
+.log-title { margin-top: 26px !important; }
+.bet-log { max-width: 600px; }
+.bet-log th, .bet-log td { padding: 10px 6px; }
+.bet-log th:last-child, .bet-log td:last-child { padding-left: 18px; }
+.you-tag { display: table; margin: 2px 0 0 auto; padding: 0 7px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 13px; font-weight: 700; line-height: 1.6; }
+@media (min-width: 720px) { .you-tag { display: inline-block; margin: 0 0 0 6px; vertical-align: 2px; } }
+.bet-log .res b { font-weight: 900; }
+.bet-log .res small { display: block; margin: 0; font-size: 14px; line-height: 1.4; }
+.res-mil { color: var(--orange-text); }
+.res-me { color: var(--blue-text); }
+.res-live { color: var(--orange-text); }
+.res-wait { color: var(--ink-2); }
+.my-record { margin: 12px 0 0; font-size: 17px; font-weight: 700; color: var(--ink); }
+
 /* 比數板：整頁唯一的深色，像球場的燈泡計分板 */
 .board {
   margin-top: 18px;

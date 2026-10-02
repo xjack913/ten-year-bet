@@ -81,6 +81,65 @@
     </div>
   </section>
 
+  <section class="wrap" aria-labelledby="pick-title"><div class="panel pick">
+    <p class="pick-eyebrow">場邊押注區 · 純好玩不用錢</p>
+    <h2 id="pick-title">你壓誰贏？</h2>
+    <p class="sub" id="pick-sub">載入中…</p>
+
+    <div class="pick-btns" id="pick-btns" role="group" aria-label="選你要壓的人">
+      <button type="button" class="pick-btn pick-mil" data-side="mil" aria-pressed="false" disabled>
+        <picture class="face">
+          <source srcset="assets/mil-face.webp?v=__V__" type="image/webp">
+          <img src="assets/mil-face.png?v=__V__" alt="" width="160" height="160" decoding="async">
+        </picture>
+        <span class="pick-name">壓岳母</span>
+        <span class="pick-aka">波段操作派</span>
+      </button>
+      <button type="button" class="pick-btn pick-me" data-side="me" aria-pressed="false" disabled>
+        <picture class="face">
+          <source srcset="assets/me-face.webp?v=__V__" type="image/webp">
+          <img src="assets/me-face.png?v=__V__" alt="" width="160" height="160" decoding="async">
+        </picture>
+        <span class="pick-name">壓叉傑克</span>
+        <span class="pick-aka">大盤市值仔</span>
+      </button>
+    </div>
+
+    <div class="confirm" id="pick-confirm" hidden>
+      <p id="confirm-q"></p>
+      <div class="confirm-actions">
+        <button type="button" class="btn-go" id="confirm-yes"></button>
+        <button type="button" class="btn-back" id="confirm-no">再想想</button>
+      </div>
+    </div>
+
+    <div class="ticket" id="ticket" tabindex="-1" hidden></div>
+    <p class="pick-msg" id="pick-msg" role="status" aria-live="polite"></p>
+
+    <div class="tug" id="tug" hidden>
+      <div class="tug-head">
+        <span class="t-mil">岳母 <b id="tug-mil-pct">50</b>%</span>
+        <span class="t-me"><b id="tug-me-pct">50</b>% 叉傑克</span>
+      </div>
+      <div class="tug-bar" id="tug-bar" role="img"><span class="tug-mil" id="tug-mil"></span><span class="tug-me"></span></div>
+      <div class="tug-foot"><span id="tug-mil-n"></span><span id="tug-me-n"></span></div>
+      <p class="odds" id="odds"></p>
+    </div>
+
+    <p class="pick-rules">每支手機或電腦每局只能壓一次，壓了就不能改（買定離手）。下注到結算日 13:30 收盤截止，截止後馬上開放下一局。不用錢、沒有獎品，純粹湊熱鬧。</p>
+
+    <h3 class="log-title">歷屆押注紀錄</h3>
+    <div class="table-scroll">
+      <table class="data bet-log" id="bet-log">
+        <thead>
+          <tr><th scope="col">局</th><th scope="col" class="num">壓岳母</th><th scope="col" class="num">壓叉傑克</th><th scope="col">開獎</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="my-record" id="my-record" hidden></p>
+  </div></section>
+
   <section class="wrap" aria-labelledby="board-title">
     <div class="board">
       <div class="board-head">

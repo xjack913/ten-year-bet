@@ -489,6 +489,222 @@
     }
   }
 
+  // ---------- 場邊押注 ----------
+  // 正式網址接 bet-api；本機預覽接 wrangler dev（127.0.0.1:8787）
+  const BET_URL = location.hostname === "bet.xjack.tw" ? "https://bet-api.xjack.tw/bets"
+    : /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "http://127.0.0.1:8787/bets" : null;
+  const SIDE_NAME = { mil: "岳母", me: "叉傑克" };
+  const WEEK = "日一二三四五六";
+
+  // 裝置記住自己的隨機編號和押過哪邊；無痕或封鎖儲存時只記在這一頁
+  const mem = {};
+  const store = {
+    get(k) { try { const v = localStorage.getItem(k); if (v != null) return v; } catch (e) { /* 改用記憶體 */ } return mem[k] ?? null; },
+    set(k, v) { mem[k] = v; try { localStorage.setItem(k, v); } catch (e) { /* 同上 */ } },
+  };
+  function betToken() {
+    const t = store.get("bet-token");
+    if (t && /^[A-Za-z0-9-]{16,64}$/.test(t)) return t;
+    const fresh = crypto.randomUUID ? crypto.randomUUID()
+      : Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("");
+    store.set("bet-token", fresh);
+    return fresh;
+  }
+  function myPicks() {
+    try { return JSON.parse(store.get("bet-picks")) || {}; } catch (e) { return {}; }
+  }
+  function savePick(round, side) {
+    const p = myPicks();
+    p[round] = { side, at: todayTPE() };
+    store.set("bet-picks", JSON.stringify(p));
+  }
+
+  const tpe = (ms) => new Date(ms + 8 * 3600000);
+  function closeLabel(ms) {
+    const d = tpe(ms);
+    return `${d.getUTCMonth() + 1}/${d.getUTCDate()}（${WEEK[d.getUTCDay()]}）${d.getUTCHours()}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+  }
+
+  // 直接複製按鈕上的大頭（網址帶版本號，不會重抓）
+  const face = (side) => document.querySelector(`.pick-${side} .face`).cloneNode(true);
+
+  let betSt = null, betData = null, pending = null, busy = false;
+
+  function renderBets(justPlaced) {
+    const st = betSt, data = betData;
+    const byN = new Map(st.rounds.map((r) => [r.n, r]));
+    const open = data.open;
+    const picks = myPicks();
+    const mine = open ? picks[open.round] : null;
+
+    // 標題與截止時間
+    if (open) {
+      const close = Date.parse(open.closes_at);
+      // 跟比數板的倒數一樣用日曆天算
+      const days = Math.round((parseDay(isoDay(tpe(close).getTime())) - parseDay(todayTPE())) / DAY);
+      const when = days > 0 ? `還有 ${days} 天` : "今天就截止";
+      $("pick-title").textContent = `第 ${open.round} 局，你壓誰贏？`;
+      $("pick-sub").replaceChildren(document.createTextNode(`下注到 ${closeLabel(close)} 收盤，`),
+        el("span", { class: "nb" }, `${when}。`), el("span", { class: "nb" }, `${fmtMD(byN.get(open.round).reveal)} 開獎。`));
+    } else {
+      $("pick-title").textContent = "十年押注結束";
+      $("pick-sub").textContent = "20 局都比完了，下面是每一局大家壓誰的紀錄。";
+    }
+
+    // 還沒押：顯示按鈕；押過：換成下注單
+    const btns = $("pick-btns");
+    btns.hidden = !open || !!mine;
+    for (const b of btns.querySelectorAll(".pick-btn")) {
+      b.disabled = false;
+      b.setAttribute("aria-pressed", String(b.dataset.side === pending));
+    }
+    const ticket = $("ticket");
+    ticket.hidden = !mine;
+    if (mine) {
+      ticket.className = `ticket t-${mine.side}${justPlaced ? " just" : ""}`;
+      const body = el("div", { class: "ticket-body" });
+      body.append(el("p", { class: "ticket-title" }, `第 ${open.round} 局下注單`),
+        el("p", { class: "ticket-pick" }, `壓${SIDE_NAME[mine.side]}`));
+      const meta = el("p", { class: "ticket-meta" });
+      meta.append(el("span", {}, `${fmtMD(mine.at)} 下注`), el("span", {}, `${fmtMD(byN.get(open.round).reveal)} 開獎`));
+      body.append(meta);
+      const stamp = el("div", { class: "ticket-stamp", "aria-hidden": "true" });
+      stamp.append(document.createTextNode("買定"), el("br"), document.createTextNode("離手"));
+      ticket.replaceChildren(face(mine.side), body, stamp);
+    }
+
+    // 人氣條：這一局兩邊各幾個人
+    const tug = $("tug");
+    tug.hidden = !open;
+    if (open) {
+      const t = data.rounds.find((r) => r.n === open.round) || { mil: 0, me: 0 };
+      const total = t.mil + t.me;
+      const milPct = total ? Math.round(t.mil / total * 100) : 50;
+      $("tug-mil-pct").textContent = String(milPct);
+      $("tug-me-pct").textContent = String(100 - milPct);
+      $("tug-mil").style.width = `${milPct}%`;
+      $("tug-bar").classList.toggle("empty", !total);
+      $("tug-bar").classList.toggle("split", t.mil > 0 && t.me > 0);
+      $("tug-bar").setAttribute("aria-label", `目前壓岳母 ${t.mil} 人，壓叉傑克 ${t.me} 人`);
+      $("tug-mil-n").textContent = `${int(t.mil)} 人`;
+      $("tug-me-n").textContent = `${int(t.me)} 人`;
+      const odds = $("odds");
+      if (!total) odds.textContent = "還沒有人下注，來當第一個！";
+      else if (!t.mil || !t.me) odds.textContent = `還沒有人壓${t.mil ? "叉傑克" : "岳母"}，現在壓就是全場唯一的勇者。`;
+      else odds.textContent = `人氣賠率：岳母 1 賠 ${(total / t.mil).toFixed(2)}、叉傑克 1 賠 ${(total / t.me).toFixed(2)}（壓的人越少，賠率越高）`;
+    }
+
+    // 歷屆紀錄：新的在上面
+    const tbody = $("bet-log").querySelector("tbody");
+    tbody.replaceChildren();
+    let hits = 0, played = 0;
+    for (const t of [...data.rounds].reverse()) {
+      const r = byN.get(t.n);
+      const pick = picks[t.n];
+      const total = t.mil + t.me;
+      const tr = el("tr");
+      tr.append(el("td", {}, `第 ${t.n} 局`));
+      for (const side of ["mil", "me"]) {
+        const td = el("td", { class: "num" }, `${int(t[side])} 人`);
+        if (pick && pick.side === side) td.append(el("span", { class: "you-tag", title: "你壓這邊" }, "你"));
+        tr.append(td);
+      }
+      const res = el("td", { class: "res" });
+      if (r && r.settled) {
+        if (r.winner === "tie") res.append(el("b", {}, "平手"));
+        else {
+          res.append(el("b", { class: `res-${r.winner}` }, `${SIDE_NAME[r.winner]}勝`));
+          if (total) res.append(el("small", {}, `${Math.round(t[r.winner] / total * 100)}% 押中`));
+        }
+        if (pick) { played += 1; if (pick.side === r.winner) hits += 1; }
+      } else if (open && t.n === open.round) {
+        res.append(el("b", { class: "res-live" }, "下注中"));
+      } else {
+        res.append(el("b", { class: "res-wait" }, "等開獎"));
+        if (r) res.append(el("small", {}, `${fmtMD(r.reveal)} 公布`));
+      }
+      tr.append(res);
+      tbody.append(tr);
+    }
+    const rec = $("my-record");
+    rec.hidden = !played;
+    rec.textContent = played ? `你的戰績：押中 ${hits} 局，共押 ${played} 局` : "";
+  }
+
+  function choose(side) {
+    if (busy) return;
+    pending = side;
+    for (const b of document.querySelectorAll(".pick-btn")) b.setAttribute("aria-pressed", String(b.dataset.side === side));
+    $("confirm-q").textContent = `確定壓${SIDE_NAME[side]}嗎？壓了就不能改喔。`;
+    const yes = $("confirm-yes");
+    yes.textContent = `確定壓${SIDE_NAME[side]}`;
+    yes.className = `btn-go go-${side}`;
+    $("pick-confirm").hidden = false;
+    $("pick-msg").textContent = "";
+    yes.focus();
+  }
+
+  function cancelPick() {
+    pending = null;
+    for (const b of document.querySelectorAll(".pick-btn")) b.setAttribute("aria-pressed", "false");
+    $("pick-confirm").hidden = true;
+  }
+
+  async function confirmPick() {
+    if (!pending || busy || !betData || !betData.open) return;
+    busy = true;
+    const yes = $("confirm-yes");
+    yes.disabled = true;
+    const msg = $("pick-msg");
+    msg.textContent = "送出中…";
+    const round = betData.open.round, side = pending;
+    let placed = false;
+    try {
+      // 不帶 Content-Type（純文字）就不用多一趟 CORS 預檢
+      const r = await fetch(BET_URL, { method: "POST", body: JSON.stringify({ round, side, token: betToken() }), cache: "no-store" });
+      const res = await r.json().catch(() => ({}));
+      if (res.status === "ok" || res.status === "already") {
+        savePick(round, res.side);
+        betData = { open: res.open, rounds: res.rounds };
+        placed = true;
+        msg.textContent = res.status === "already" && res.side !== side
+          ? `這支手機這局已經壓過${SIDE_NAME[res.side]}了，買定離手不能改喔。`
+          : "下注成功！開獎那天回來看你有沒有押中。";
+      } else if (res.status === "closed") {
+        betData = { open: res.open, rounds: res.rounds };
+        msg.textContent = "這局剛好截止了，換押下一局吧。";
+      } else if (res.status === "limit") {
+        msg.textContent = "同一個網路這局已經壓太多注了，換個網路再試試。";
+      } else {
+        msg.textContent = "沒送出去，請再按一次。";
+      }
+    } catch (e) {
+      msg.textContent = "網路好像不太穩，沒送出去，請再按一次。";
+    }
+    busy = false;
+    yes.disabled = false;
+    if (placed || !betData.open || betData.open.round !== round) cancelPick();
+    renderBets(placed);
+    if (placed) $("ticket").focus();
+  }
+
+  async function initBets(st) {
+    betSt = st;
+    for (const b of document.querySelectorAll(".pick-btn")) b.addEventListener("click", () => choose(b.dataset.side));
+    $("confirm-yes").addEventListener("click", confirmPick);
+    $("confirm-no").addEventListener("click", cancelPick);
+    const offline = () => { $("pick-sub").textContent = "押注區暫時連不上，晚點再回來看看。"; };
+    if (!BET_URL) return offline();
+    try {
+      const r = await fetch(BET_URL, { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      betData = await r.json();
+      renderBets(false);
+    } catch (e) {
+      offline();
+    }
+  }
+
   // ---------- 啟動 ----------
   async function main() {
     renderViews();
@@ -502,6 +718,7 @@
       renderBoard(st);
       renderCorners(st, x);
       renderCountdown(st);
+      initBets(st);
       renderHoldings(x);
       $("updated").textContent = `最後更新：${fmtDay(x.as_of)} 收盤。`;
       renderChart(st);

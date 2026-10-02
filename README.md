@@ -20,7 +20,27 @@ https://bet.xjack.tw
 
 `counter/` 是 Cloudflare Worker＋D1，網址 `https://bet-api.xjack.tw/views`（GET 讀、POST +1，POST 只收 bet.xjack.tw 來源）。只存一個數字，不記 IP 或個人資料。同一個分頁工作階段只算一次。
 
-部署：在 `counter/` 執行 `npx wrangler deploy`（要先 `npx wrangler login`）。
+## 場邊押注
+
+網頁上讓大家猜每一局誰贏，純好玩、不用錢、沒有獎品。跟瀏覽人次共用同一個 Worker＋D1：
+
+- `GET https://bet-api.xjack.tw/bets`：目前開放下注的局（`open`）、各局押岳母／叉傑克的人數（`rounds`）。
+- `POST /bets`，內容 `{"round":1,"side":"mil|me","token":"..."}`：押一注，只收 bet.xjack.tw 來源。
+- 每局下注到該局結算日 13:30（收盤）截止，截止後自動開放下一局；第 20 局截止後就不能再押。
+- 同一個裝置（瀏覽器自己產生的隨機 token）每局一注，押了不能改。
+- 同一個連線來源每局最多 20 注，擋有人狂灌。來源只存「祕密鹽＋局數＋IP（IPv6 取 /64）」的雜湊，每局換鹽，無法還原成 IP；祕密鹽放在 Worker secret `BET_SALT`。
+- 逐筆紀錄在 `bets` 表，各局人數另存在 `counters`（`bet:<局>:<mil|me>`），網頁讀人數不必掃全表。
+- 誰贏照 `data/settlements.json` 判斷，所以結算時不用另外處理押注，填好淨值、紀錄表就會顯示「岳母勝／叉傑克勝」和押中比例。
+
+## 部署 Worker
+
+在 `counter/` 執行（要先 `npx wrangler login`）：
+
+1. 第一次或 schema 有改：`npx wrangler d1 execute bet-counter --remote --file schema.sql`（全部是 `IF NOT EXISTS`，重跑不會動到資料）
+2. 第一次：`npx wrangler secret put BET_SALT`（貼一串隨機字，之後不要換，換了同來源上限會重算）
+3. `npx wrangler deploy`
+
+本機測試：`npx wrangler dev --var BET_SALT:devsalt --var DEV_ORIGIN:http://localhost:8000`，網頁從 `http://localhost:8000` 開就會接到本機 Worker；要模擬別的時間點可再加 `--var DEV_NOW:2027-07-02T00:00:00Z`。
 
 ## 每局結算
 

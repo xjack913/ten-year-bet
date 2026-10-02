@@ -228,6 +228,22 @@ h1 {
 .pick-msg { margin: 10px 0 0; font-size: 17px; font-weight: 700; color: var(--ink); }
 .pick-msg:empty { display: none; }
 
+.share { margin-top: 14px; }
+.share[hidden] { display: none; }
+.share-label { margin: 0 0 8px; font-size: 17px; font-weight: 700; color: var(--ink); }
+.share-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 420px; }
+.share-btn {
+  display: grid; place-items: center; min-height: 50px; padding: 0 8px;
+  border: 2px solid; border-radius: 12px; font: inherit; font-size: 18px; font-weight: 700; line-height: 1.2;
+  color: var(--ink); text-decoration: none; cursor: pointer; transition: background-color .15s ease-out;
+}
+.share-line { background: #EAF9F0; border-color: #06C755; }
+.share-line:hover { background: #D3F2DF; }
+.share-fb { background: #EAF1FE; border-color: #1877F2; }
+.share-fb:hover { background: #D6E4FC; }
+.share-copy { background: var(--card); border-color: #AEBBCB; }
+.share-copy:hover { background: var(--page); }
+
 .tug { margin-top: 22px; }
 .tug[hidden] { display: none; }
 .tug-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 17px; font-weight: 700; }

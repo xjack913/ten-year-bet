@@ -528,7 +528,32 @@
   // 直接複製按鈕上的大頭（網址帶版本號，不會重抓）
   const face = (side) => document.querySelector(`.pick-${side} .face`).cloneNode(true);
 
-  let betSt = null, betData = null, pending = null, busy = false;
+  let betSt = null, betData = null, pending = null, busy = false, shareText = "";
+  const SHARE_URL = "https://bet.xjack.tw/";
+
+  async function copyShare() {
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(shareText);
+      ok = true;
+    } catch (e) {
+      // 舊瀏覽器或沒有剪貼簿權限：退回選取後複製
+      const ta = el("textarea", { readonly: "", style: "position:fixed;top:0;left:0;opacity:0" });
+      ta.value = shareText;
+      document.body.append(ta);
+      ta.select();
+      try { ok = document.execCommand("copy"); } catch (e2) { ok = false; }
+      ta.remove();
+    }
+    const btn = $("share-copy");
+    $("pick-msg").textContent = ok
+      ? "複製好了，貼到 LINE 群組或臉書給朋友吧！"
+      : `沒辦法自動複製，請手動複製這段：${shareText.replace("\n", " ")}`;
+    if (ok) {
+      btn.textContent = "已複製！";
+      setTimeout(() => { btn.textContent = "複製連結"; }, 2000);
+    }
+  }
 
   function renderBets(justPlaced) {
     const st = betSt, data = betData;
@@ -571,6 +596,16 @@
       const stamp = el("div", { class: "ticket-stamp", "aria-hidden": "true" });
       stamp.append(document.createTextNode("買定"), el("br"), document.createTextNode("離手"));
       ticket.replaceChildren(face(mine.side), body, stamp);
+    }
+
+    // 押完才出現分享：LINE（官方網頁分享，手機電腦都能用）、臉書、複製連結
+    $("share").hidden = !mine;
+    if (mine) {
+      const text = `叉傑克跟岳母的十年之約，第 ${open.round} 局我壓${SIDE_NAME[mine.side]}，你壓誰？`;
+      const url = encodeURIComponent(SHARE_URL);
+      $("share-line").href = `https://social-plugins.line.me/lineit/share?url=${url}&text=${encodeURIComponent(text)}`;
+      $("share-fb").href = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+      shareText = `${text}\n${SHARE_URL}`;
     }
 
     // 人氣條：這一局兩邊各幾個人
@@ -693,6 +728,7 @@
     for (const b of document.querySelectorAll(".pick-btn")) b.addEventListener("click", () => choose(b.dataset.side));
     $("confirm-yes").addEventListener("click", confirmPick);
     $("confirm-no").addEventListener("click", cancelPick);
+    $("share-copy").addEventListener("click", copyShare);
     const offline = () => { $("pick-sub").textContent = "押注區暫時連不上，晚點再回來看看。"; };
     if (!BET_URL) return offline();
     try {

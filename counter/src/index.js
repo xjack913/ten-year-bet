@@ -11,8 +11,15 @@
 //   每局下注到該局結算日 13:30（收盤）截止，截止後自動開放下一局。
 //   token 是瀏覽器自己產生的隨機編號；連線來源只存「加鹽雜湊」，鹽每局不同、
 //   祕密鹽放在 Worker secret（BET_SALT），無法還原成 IP，只用來擋同一個來源狂灌票。
+//
+// 每日更新（Cron Trigger，時間寫在 wrangler.toml）
+//   GitHub Actions 的 schedule 常延遲好幾個小時（2026/10/1、10/2 都晚了快 7 小時才跑），
+//   所以改由這裡準時呼叫 GitHub API，觸發「每日更新與部署」workflow。
+//   需要 Worker secret GH_TOKEN：fine-grained token，只給 ten-year-bet 這個 repo 的 Actions 讀寫權限。
 
 const ALLOWED_ORIGINS = ["https://bet.xjack.tw"];
+const UPDATE_WORKFLOW_URL =
+  "https://api.github.com/repos/xjack913/ten-year-bet/actions/workflows/update.yml/dispatches";
 const ROUNDS = 20;
 const SIDES = ["mil", "me"];
 const PER_SOURCE_LIMIT = 20; // 同一個連線來源每局最多幾注（家裡或公司共用網路會同一個來源）
@@ -133,6 +140,23 @@ async function placeBet(request, env, now, headers) {
   return json({ status: "ok", side, ...(await betsState(env, now)) }, 200, headers);
 }
 
+// 丟錯讓 Cloudflare 把這次 Cron 記成失敗，在 Worker 的 Cron Events 看得到
+export async function dispatchUpdate(env) {
+  if (!env.GH_TOKEN) throw new Error("GH_TOKEN not configured");
+  const res = await fetch(UPDATE_WORKFLOW_URL, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${env.GH_TOKEN}`,
+      "Accept": "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      "User-Agent": "bet-counter",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ref: "main" }),
+  });
+  if (!res.ok) throw new Error(`workflow dispatch failed: ${res.status} ${await res.text()}`);
+}
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin") || "";
@@ -169,5 +193,9 @@ export default {
     }
 
     return json({ error: "not found" }, 404, headers);
+  },
+
+  async scheduled(controller, env) {
+    await dispatchUpdate(env);
   },
 };

@@ -9,12 +9,18 @@ https://bet.xjack.tw
 | 檔案 | 內容 | 誰更新 |
 |---|---|---|
 | `data/config.json` | 我的起算日、配置、起算收盤價 | 開賽時寫定，不再改 |
-| `data/prices.csv` | 0050、009826 每日收盤價（臺灣證券交易所） | GitHub Actions，每個交易日 15:30 |
+| `data/prices.csv` | 0050、009826 每日收盤價（臺灣證券交易所） | GitHub Actions，每個交易日 15:40（見下方「每日更新排程」） |
 | `data/dividends.csv` | 除息紀錄（臺灣證券交易所除權除息計算結果表） | 同上 |
 | `data/xjack.json` | 我的每日淨值與持股（網頁讀這個） | 同上，由 `scripts/update_xjack.py` 產生 |
 | `data/settlements.json` | 每局結算：雙方淨值 | 每局結算時手動填 |
 
 遇到腳本沒辦法自動處理的狀況（ETF 分割、股票股利、單日漲跌超過 25%、缺價），Actions 會直接失敗，網站停在上一次的正確資料，等人工處理。
+
+### 每日更新排程
+
+GitHub Actions 自己的 schedule 常延遲好幾個小時（實測 15:30 的排程拖到 22:00 以後才跑），所以改由 Cloudflare Worker（`counter/`）的 Cron Trigger 準時觸發：週一到週五 15:40 呼叫 GitHub API 跑「每日更新與部署」，18:40 再跑一次當備援；GitHub 原本的 schedule 也留著。重複跑沒關係，沒有新資料就不會 commit。
+
+急著看今天的收盤價，可以到 Actions →「每日更新與部署」→ Run workflow 手動跑。
 
 ## 瀏覽人次
 
@@ -38,7 +44,8 @@ https://bet.xjack.tw
 
 1. 第一次或 schema 有改：`npx wrangler d1 execute bet-counter --remote --file schema.sql`（全部是 `IF NOT EXISTS`，重跑不會動到資料）
 2. 第一次：`npx wrangler secret put BET_SALT`（貼一串隨機字，之後不要換，換了同來源上限會重算）
-3. `npx wrangler deploy`
+3. 第一次或 token 到期：`npx wrangler secret put GH_TOKEN`，貼 GitHub fine-grained token（Repository access 只選 ten-year-bet，Permissions 只開 Actions: Read and write），每日更新排程靠它觸發 workflow
+4. `npx wrangler deploy`
 
 本機測試：`npx wrangler dev --var BET_SALT:devsalt --var DEV_ORIGIN:http://localhost:8000`，網頁從 `http://localhost:8000` 開就會接到本機 Worker；要模擬別的時間點可再加 `--var DEV_NOW:2027-07-02T00:00:00Z`。
 

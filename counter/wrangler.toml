@@ -5,6 +5,11 @@ account_id = "8bed6fd9481097ede394653811058cad"
 workers_dev = false
 routes = [{ pattern = "bet-api.xjack.tw", custom_domain = true }]
 
+# 每日更新：週一到週五 15:40、18:40（台北時間）觸發 GitHub Actions，後者是備援。
+# Cloudflare 的 cron 用 UTC；星期用英文縮寫，因為這裡數字 1 是星期日，跟一般 cron 不同。
+[triggers]
+crons = ["40 7 * * MON-FRI", "40 10 * * MON-FRI"]
+
 [[d1_databases]]
 binding = "DB"
 database_name = "bet-counter"

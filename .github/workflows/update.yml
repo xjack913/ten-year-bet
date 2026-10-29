@@ -9,10 +9,9 @@ on:
   push:
     branches: [main]
 
+# 預設只能讀，各 job 只開自己需要的權限
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: read
 
 concurrency:
   group: pages
@@ -21,6 +20,9 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # 推每日資料的 commit
+      pages: read # configure-pages 讀 Pages 設定
     outputs:
       changed: ${{ steps.commit.outputs.changed }}
     steps:
@@ -67,6 +69,9 @@ jobs:
     needs: update
     if: github.event_name != 'schedule' || needs.update.outputs.changed == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

@@ -1,3 +1,6 @@
 __pycache__/
 counter/.wrangler/
 counter/node_modules/
+# 本機祕密：wrangler 的 .dev.vars、各種 .env
+.dev.vars*
+.env*

@@ -2,8 +2,8 @@ name: 每日更新與部署
 
 on:
   schedule:
-    # 主要由 Cloudflare Worker（counter/）準時用 workflow_dispatch 觸發；
-    # GitHub 的 schedule 常延遲好幾個小時，留著當備援。
+    # GitHub 的 schedule 常延遲好幾個小時，網站通常當天晚上才更新；急著看就手動 Run workflow。
+    # Cloudflare Worker（counter/）的準時觸發目前沒開，見 README「每日更新排程」。
     - cron: "30 7 * * 1-5" # 週一到週五 15:30（台北時間），證交所收盤資料已公布
   workflow_dispatch:
   push:

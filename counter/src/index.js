@@ -12,9 +12,9 @@
 //   token 是瀏覽器自己產生的隨機編號；連線來源只存「加鹽雜湊」，鹽每局不同、
 //   祕密鹽放在 Worker secret（BET_SALT），無法還原成 IP，只用來擋同一個來源狂灌票。
 //
-// 每日更新（Cron Trigger，時間寫在 wrangler.toml）
+// 每日更新（Cron Trigger，時間寫在 wrangler.toml；目前沒開）
 //   GitHub Actions 的 schedule 常延遲好幾個小時（2026/10/1、10/2 都晚了快 7 小時才跑），
-//   所以改由這裡準時呼叫 GitHub API，觸發「每日更新與部署」workflow。
+//   開了就由這裡準時呼叫 GitHub API，觸發「每日更新與部署」workflow。
 //   需要 Worker secret GH_TOKEN：fine-grained token，只給 ten-year-bet 這個 repo 的 Actions 讀寫權限。
 
 const ALLOWED_ORIGINS = ["https://bet.xjack.tw"];

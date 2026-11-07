@@ -1,7 +1,7 @@
 name = "bet-counter"
 main = "src/index.js"
 compatibility_date = "2026-09-01"
-account_id = "8bed6fd9481097ede394653811058cad"
+account_id = "f90d1d21e633d2e442a188f2d70b1541"
 workers_dev = false
 routes = [{ pattern = "bet-api.xjack.tw", custom_domain = true }]
 
@@ -14,4 +14,4 @@ routes = [{ pattern = "bet-api.xjack.tw", custom_domain = true }]
 [[d1_databases]]
 binding = "DB"
 database_name = "bet-counter"
-database_id = "0198894f-00c8-4d81-9f6d-b1b5bbd38f2d"
+database_id = "41cc014c-7448-47a6-9902-400b97c3bcd6"
